@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Notes App</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 500px; margin: 40px auto; padding: 0 16px; }
+    form { display: flex; gap: 8px; margin-bottom: 20px; }
+    input { flex: 1; padding: 8px; }
+    button { padding: 8px 12px; cursor: pointer; }
+    li { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Notes</h1>
+  <form id="form">
+    <input id="text" placeholder="Write a note..." required>
+    <button>Add</button>
+  </form>
+  <ul id="list"></ul>
+  <script>
+    const list = document.getElementById('list');
+
+    async function load() {
+      const res = await fetch('/api/notes');
+      const notes = await res.json();
+      list.innerHTML = '';
+      notes.forEach(n => {
+        const li = document.createElement('li');
+        li.textContent = n.text;
+        const del = document.createElement('button');
+        del.textContent = 'Delete';
+        del.onclick = async () => {
+          await fetch('/api/notes/' + n.id, { method: 'DELETE' });
+          load();
+        };
+        li.appendChild(del);
+        list.appendChild(li);
+      });
+    }
+
+    document.getElementById('form').onsubmit = async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('text');
+      await fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: input.value })
+      });
+      input.value = '';
+      load();
+    };
+
+    load();
+  </script>
+</body>
+</html>
